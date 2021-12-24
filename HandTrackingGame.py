@@ -3,6 +3,15 @@ import mediapipe as mp
 import time
 from random import randrange
 
+def centerText(w, h, text, font, size, thickness):
+    # get boundary of this text
+    textsize = cv2.getTextSize(text, font, size, thickness)[0]
+    # get coords based on boundary
+    textX = (w - textsize[0]) // 2
+    textY = (h + textsize[1]) // 2
+    return textX, textY
+
+
 class handDetector():
     def __init__(self, mode=False, maxHands=2, complexity=1, detectionCon=0.5, trackCon=0.5):
         self.mode = mode
@@ -56,6 +65,14 @@ class handDetector():
 def main():
     pTime = 0
 
+    # define code for each finger tip
+    finger_thumb = 4
+    finger_index = 8
+    finger_middle = 12
+    finger_ring = 16
+    finger_pinky = 20
+    finger_dict = {finger_thumb: 'Thumb', finger_index: 'Index', finger_middle: 'Middle', finger_ring: 'Ring', finger_pinky: 'Pinky'}
+
     # initialize window size
     screen_width = 800
     screen_height = 600
@@ -68,40 +85,66 @@ def main():
     points = 0
     found_obj = True
 
+    start_time = time.time()
+
     while True:
         success, frame = cap.read()
-        
-        # generate random objective coordinates
-        if found_obj:
-            x_obj = randrange(150, screen_width-150)
-            y_obj = randrange(150, screen_height-150)
-            found_obj = False
-
         frame = detector.findHands(frame=frame, draw=False)
-        lmList = detector.findPosition(frame=frame, handNum=0, draw=True, drawPointNum=8)
-
-        cv2.circle(frame, (x_obj, y_obj), 25, (0,0,255), cv2.FILLED)
-
-
-        if len(lmList) > 0:
-            print(lmList[8]) # print location of tip of index finger (8)
-            # (0,0)
-            #     ...
-            #       (w,h)
-
-            # check if index finger is pointing to objective
-            if x_obj-20 <= lmList[8][1] <= x_obj+20 and y_obj-20 <= lmList[8][2] <= y_obj+20:
-                found_obj = True
-                points += 1
+        lmList = detector.findPosition(frame=frame, handNum=0, draw=False, drawPointNum=8)
+        screen_width = frame.shape[1]
+        screen_height = frame.shape[0]
 
         # display framerate
         cTime = time.time()
         fps = 1/(cTime-pTime)
         pTime = cTime
-        # cv2.putText(frame, str(int(fps)), (1,40), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,255), 3)
-        cv2.putText(frame, 'points: ' + str(points), (1,40), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,255), 3)
+        timer = int(60-(cTime-start_time))
+        # cv2.putText(frame, str(int(fps)), (1,40), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,255), 3) 
 
+        if timer > 0:
+            # generate random objective coordinates
+            if found_obj:
+                finger_obj = randrange(1,6)*4
+                x_obj = randrange(150, screen_width-150)
+                y_obj = randrange(150, screen_height-150)
+                found_obj = False
+
+            cv2.circle(frame, (x_obj, y_obj), 25, (0,0,255), cv2.FILLED) # display objective onto screen
+
+            if len(lmList) > 0:
+                # print(lmList[finger_obj]) # print location of tip of index finger (8)
+                # (0,0)
+                #     ...
+                #       (w,h)
+
+                # check if index finger is pointing to objective
+                if x_obj-25 <= lmList[finger_obj][1] <= x_obj+25 and y_obj-25 <= lmList[finger_obj][2] <= y_obj+25:
+                    found_obj = True
+                    points += 1
+                    
+            cv2.putText(frame, str(timer), (1,40), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,255), 3) 
+            cv2.putText(frame, 'points: ' + str(points), (screen_width-225,screen_height-5), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,255), 3)
+            cv2.putText(frame, finger_dict[finger_obj], (1,screen_height-8), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,255), 3)
+
+        else: # GAMEOVER screen
+            gameover_text = 'GAMEOVER!'
+            gameover_textX, gameover_textY = centerText(screen_width, screen_height, text=gameover_text, font=cv2.FONT_HERSHEY_PLAIN, size=5, thickness=2)
+            total_points_text = 'points: ' + str(points)
+            total_points_textX, total_points_textY = centerText(screen_width+20, screen_height+120, text=gameover_text, font=cv2.FONT_HERSHEY_PLAIN, size=5, thickness=2)
+            cv2.putText(frame, gameover_text, (gameover_textX, gameover_textY), cv2.FONT_HERSHEY_PLAIN, 5, (0, 0, 255), 2) # add text centered on image
+            cv2.putText(frame, total_points_text, (total_points_textX, total_points_textY), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 255), 2)
+
+            # restart button
+            restart_x = screen_width-150
+            restart_y = screen_height-100
+            cv2.circle(frame, (restart_x, restart_y), 25, (0,0,255), cv2.FILLED) # display objective onto screen
+            cv2.putText(frame, 'Index finger to restart -->', (screen_width-425, screen_height-100), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 0), 1)
+            if len(lmList) > 0 and restart_x-25 <= lmList[finger_index][1] <= restart_x+25 and restart_y-25 <= lmList[finger_index][2] <= restart_y+25:
+                timer = 0
+                start_time = time.time()
+                points = 0
         cv2.imshow('img1', frame)  # display the frame
+        
 
         # kill webcam
         if cv2.waitKey(1) & 0xFF == ord('q'):  
