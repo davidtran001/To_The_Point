@@ -11,5 +11,5 @@ pip install mediapipe
 ```
 
 # Demonstration
-![Alt Text](https://github.com/davidtran001/To_The_Point/blob/main/tothepoint-1.gif?raw=true)
+![Alt Text](https://github.com/davidtran001/To_The_Point/blob/main/images/tothepoint-1.gif?raw=true)
 
