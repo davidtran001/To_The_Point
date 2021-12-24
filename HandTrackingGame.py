@@ -77,8 +77,9 @@ def main():
     screen_width = 800
     screen_height = 600
 
-    cap = cv2.VideoCapture(-0, cv2.CAP_DSHOW)  # Selects video capture source 
-    detector = handDetector()
+    cap = cv2.VideoCapture(-0, cv2.CAP_DSHOW)  # selects video capture source 
+
+    detector = handDetector() # create handDetector object
 
     points = 0
     found_obj = True
