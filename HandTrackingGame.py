@@ -78,8 +78,6 @@ def main():
     screen_height = 600
 
     cap = cv2.VideoCapture(-0, cv2.CAP_DSHOW)  # Selects video capture source 
-    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, screen_width)
-    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, screen_height)
     detector = handDetector()
 
     points = 0
@@ -87,9 +85,11 @@ def main():
 
     start_time = time.time()
 
+    start_screen = True
+
     while True:
         success, frame = cap.read()
-        frame = detector.findHands(frame=frame, draw=False)
+        frame = detector.findHands(frame=frame, draw=True)
         lmList = detector.findPosition(frame=frame, handNum=0, draw=False, drawPointNum=8)
         screen_width = frame.shape[1]
         screen_height = frame.shape[0]
@@ -98,10 +98,22 @@ def main():
         cTime = time.time()
         fps = 1/(cTime-pTime)
         pTime = cTime
-        timer = int(60-(cTime-start_time))
+        timer = int(20-(cTime-start_time))
         # cv2.putText(frame, str(int(fps)), (1,40), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,255), 3) 
 
-        if timer > 0:
+        if start_screen: 
+            start_text = 'To The Point'
+            start_textX, start_textY = centerText(screen_width, screen_height, text=start_text, font=cv2.FONT_HERSHEY_PLAIN, size=5, thickness=2)
+            cv2.putText(frame, start_text, (start_textX, start_textY), cv2.FONT_HERSHEY_PLAIN, 5, (0, 255, 0), 2) 
+            instructions = 'Show your hand to begin!'
+            instructions_textX, instructions_textY = centerText(screen_width, screen_height, text=instructions, font=cv2.FONT_HERSHEY_PLAIN, size=3, thickness=2)
+            cv2.putText(frame, instructions, (instructions_textX+100, instructions_textY+50), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2) 
+
+            if len(lmList) > 0:
+                start_screen = False
+                start_time = time.time()
+
+        elif timer > 0:
             # generate random objective coordinates
             if found_obj:
                 finger_obj = randrange(1,6)*4
@@ -122,9 +134,9 @@ def main():
                     found_obj = True
                     points += 1
                     
-            cv2.putText(frame, str(timer), (1,40), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,255), 3) 
-            cv2.putText(frame, 'points: ' + str(points), (screen_width-225,screen_height-5), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,255), 3)
-            cv2.putText(frame, finger_dict[finger_obj], (1,screen_height-8), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,255), 3)
+            cv2.putText(frame, str(timer), (1,40), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,0), 3) 
+            cv2.putText(frame, 'points: ' + str(points), (screen_width-225,screen_height-5), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,0), 3)
+            cv2.putText(frame, finger_dict[finger_obj], (1,screen_height-8), cv2.FONT_HERSHEY_PLAIN, 3, (0,255,0), 3)
 
         else: # GAMEOVER screen
             gameover_text = 'GAMEOVER!'
@@ -134,17 +146,16 @@ def main():
             cv2.putText(frame, gameover_text, (gameover_textX, gameover_textY), cv2.FONT_HERSHEY_PLAIN, 5, (0, 0, 255), 2) # add text centered on image
             cv2.putText(frame, total_points_text, (total_points_textX, total_points_textY), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 255), 2)
 
-            # restart button
+            # display restart button
             restart_x = screen_width-150
             restart_y = screen_height-100
-            cv2.circle(frame, (restart_x, restart_y), 25, (0,0,255), cv2.FILLED) # display objective onto screen
+            cv2.circle(frame, (restart_x, restart_y), 25, (0,255,0), cv2.FILLED) # display objective onto screen
             cv2.putText(frame, 'Index finger to restart -->', (screen_width-425, screen_height-100), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 0), 1)
             if len(lmList) > 0 and restart_x-25 <= lmList[finger_index][1] <= restart_x+25 and restart_y-25 <= lmList[finger_index][2] <= restart_y+25:
-                timer = 0
                 start_time = time.time()
                 points = 0
-        cv2.imshow('img1', frame)  # display the frame
-        
+
+        cv2.imshow('img1', frame)  # display the frame        
 
         # kill webcam
         if cv2.waitKey(1) & 0xFF == ord('q'):  
