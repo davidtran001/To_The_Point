@@ -131,7 +131,7 @@ def main():
                 #       (w,h)
 
                 # check if index finger is pointing to objective
-                if x_obj-25 <= lmList[finger_obj][1] <= x_obj+25 and y_obj-25 <= lmList[finger_obj][2] <= y_obj+25:
+                if x_obj-20 <= lmList[finger_obj][1] <= x_obj+20 and y_obj-20 <= lmList[finger_obj][2] <= y_obj+20:
                     found_obj = True
                     points += 1
                     
