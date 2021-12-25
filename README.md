@@ -1,10 +1,10 @@
 # To The Point
-An interactive computer vision game created with Python, openCV, and hand detection. 
+An interactive computer vision game created with Python, OpenCV, and hand detection. 
 
 # Requirements 
 You will need a webcam to play To The Point.
 
-You must have openCV and Mediapipe installed, you can install these modules by typing in the following commands into terminal:
+You must have OpenCV and Mediapipe installed, you can install these modules by typing in the following commands into terminal:
 ```
 pip install opencv-contrib-python
 pip install mediapipe
